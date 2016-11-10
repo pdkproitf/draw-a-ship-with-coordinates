@@ -1,0 +1,141 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package da_java;
+
+import com.evivaultil.ThreadSyn;
+import java.util.TreeSet;
+import javax.swing.JFrame;
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.color.ColorSpace;
+import java.util.Random;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+import java.awt.*;
+
+/**
+ *
+ * @author pdkpro
+ */
+public class DrawToMapThread extends Canvas implements Runnable {
+
+    Image img = new ImageIcon(Constants.linkImage).getImage();
+
+    public DrawToMapThread(String nam) {
+        new Thread(this).start();
+
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                repaint();
+                Thread.sleep(1000);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public void paint(Graphics g) {
+        Color c = Color.red;
+        g.setColor(c);
+        // g.drawImage(img2, 0, 0, Constants.width, Constants.heigh, null);
+        VeLuoi(g);
+        //ve thuyen
+        if (Constants.map.size() > 0) {
+            for (int i = 0; i < Constants.distionaries.size(); i++) {
+                String key = Constants.distionaries.get(i);
+                Message sms = Constants.map.get(key);
+                Message sms2 = Constants.hashFirstData.get(key);
+                g.setColor(Color.red);
+                g.setFont(new java.awt.Font("aria", 10, 10));
+                g.drawImage(img, sms.getXA() - (int) sms2.getLon() / 2, sms.getYA() - (int) sms2.getLag() / 2, (int) sms2.getLon(), (int) sms2.getLag(), this);
+                g.drawString(key, sms.getXA() - (int) sms2.getLon() / 2, sms.getYA());
+
+            }
+            //kiem tra su nguy hiem
+
+            for (int i = 0; i < Constants.distionaries.size(); i++) {
+                String key = Constants.distionaries.get(i);
+                Message sms = Constants.map.get(key);
+                Message sms2 = Constants.hashFirstData.get(key);
+                Color c2 = new Color(new Random().nextInt(255), new Random().nextInt(255), new Random().nextInt(255));
+                g.setColor(c2);
+                if (checkDanger(sms.getMa(), sms.getXA(), sms.getYA(), sms2.getLon(), sms2.getLag(), g)) {
+                    System.out.println("DAGER " + sms.getMa());
+                   // g.drawOval(sms.getXA() - 70, sms.getYA() - 70, 140, 140);
+                }
+            }
+        }
+    }
+
+    //neu 2 tau vi pham khoan cach an toan thi acnh bao
+    public boolean checkDanger(String ma, int x, int y, double lon, double lag, Graphics g) {
+        for (int j = 0; j < Constants.distionaries.size(); j++) {
+            String key = Constants.distionaries.get(j);
+            Message sms = Constants.map.get(key);
+            Message sms2 = Constants.hashFirstData.get(key);
+            double a = (double) (x - sms.getXA() - sms2.getLon() / 2 - lon / 2);
+            double b = (double) (y - sms.getYA() - sms2.getLag() / 2 - lag / 2);
+            float delta = (float) Math.sqrt(a * a + b * b);
+            System.out.println("CHECK VOI " + ma + " x= " + x + " y =" + y + " lon " + lon + "  lag " + lag + "  ma " + sms.getMa() + " x = " + sms.getXA()
+                    + "  y= " + sms.getYA() + " lon " + sms2.getLon() + " lag " + sms2.getLag() + " a " + a + " b " + b + "  delta " + delta);
+            if (!sms.getMa().equals(ma)) {
+                if (delta <= 70) {
+                    //dua vao SmsCanhBao
+                    Constants.HashSmsCanhBao.put(ma, "ban dang gap nguy hiem voi tau " + sms.getMa());
+                    Constants.HashSmsCanhBao.put(sms.getMa(), "ban dang gap nguy hiem voi tau " + ma);
+                    Constants.distionCanhBao.add(ma);
+                    Constants.distionCanhBao.add(sms.getMa());
+                    //
+                    g.drawOval(sms.getXA() - 70, sms.getYA() - 70, 140, 140);//canh bao tau nguy hiem voi no
+                    // g.fillOval(sms.getXA() - 70, sms.getYA() - 70, 140, 140);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void VeLuoi(Graphics g) {
+        //while (true) {
+            g.setColor(Color.black);
+            for (int i = 0; i <= Constants.width; i += 50) {
+                g.drawString(i + "", i, 10);//ve truc x tren
+            }
+            for (int i = 50; i <= Constants.width; i += 50) {
+                g.drawString(i + "", i, Constants.heigh);//ve truc x duoi
+            }
+            g.setColor(Color.red);
+            for (int i = 50; i <= Constants.heigh; i += 50) {
+                g.drawString(i + "", 0, i);//ve truc y trai
+            }
+            for (int i = 50; i < Constants.heigh; i += 50) {
+                g.drawString(i + "", Constants.width + 10, i);//ve truc y phai
+            }        //ve luoi ngang
+            g.setColor(Color.blue);
+            for (int i = 0; i <= Constants.heigh - 25; i += 25) {
+                for (int j = 0; j <= Constants.width; j += 100) {
+                    g.drawString("--------------------------", j, i);
+                }
+            }
+            //ve luoi doc
+            for (int i = 25; i <= Constants.width; i += 25) {
+                for (int j = 0; j <= Constants.heigh; j += 45) {
+                    g.drawString("|", i, j);
+                    g.drawString("|", i, j + 15);
+                    g.drawString("|", i, j + 30);
+                    g.drawString("|", i, j + 45);
+                }
+            }
+        //}
+    }
+}
